@@ -1,10 +1,9 @@
-from .persona import run_persona
-from langchain_core.messages import AIMessage
+from .persona import run_persona, build_persona_graph
 from langchain_groq.chat_models import ChatGroq
 from langgraph.graph import StateGraph, END, START
 from src.utils import load_prompt
 from dotenv import load_dotenv
-from .schemas import ChatState, DecomposerResponse
+from .schemas import ChatState
 from langgraph.types import Send, Command
 import os
 
@@ -12,16 +11,17 @@ load_dotenv()
 
 GROQ_API_KEY = os.getenv("GRQO_API_KEY")
 llm = ChatGroq(model="llama-3.3-70b-versatile")
+persona_graph = build_persona_graph()
 
 
 def query_decomposition(state: ChatState) -> ChatState:
     question = state["question"]
     prompt = load_prompt(name="decomposer")
-    chain = prompt | llm.with_structured_output(schema=DecomposerResponse)
+    chain = prompt | llm
     response = chain.invoke({
         "question": question
     })
-    return{"instructions": response.instructions}
+    return{"instructions": response.content}
 
     
 def compile_team(state:ChatState):
@@ -36,7 +36,6 @@ def compile_team(state:ChatState):
                     "instructions": instructions,
                     "messages": [],
                     "corrections": [],
-                    "score": 0.0,
                     "counter": 0
                 }) for persona in team])
 
@@ -46,16 +45,14 @@ def call_persona(state:ChatState):
     instructions = state["instructions"]
     messages = state["messages"]
     corrections = state["corrections"]
-    score = state["score"]
     counter = state["counter"]
-    response = run_persona(persona_initial_state={
+    response = run_persona(persona_graph=persona_graph, persona_initial_state={
         "question": question,
         "name": name,
         "instructions": instructions,
         "messages": messages,
-        "corrections": corrections,
-        "score": score,
         "counter": counter,
+        "corrections": corrections
     })
     return {"aggregated_messages": [response]}
 
@@ -84,3 +81,4 @@ def build_chat_graph():
     graph.add_edge("aggregator", END)
     app = graph.compile()
     return app
+
