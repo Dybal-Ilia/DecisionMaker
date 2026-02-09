@@ -2,32 +2,51 @@ from langchain_groq.chat_models import ChatGroq
 from langgraph.graph import StateGraph, START, END
 from langgraph.prebuilt import ToolNode
 from langchain_tavily import TavilySearch
+from tavily  import TavilyClient
+from langchain_core.tools import tool
 from dotenv import load_dotenv
 import os
-from .schemas import WorkerState, ReflectionResponse
+from .schemas import WorkerState
 from src.utils import load_prompt
+from src.utils import get_logger
+
 load_dotenv()
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 TAVILY_API_KEY = os.getenv("TAVILY_API_KEY")
+logger = get_logger()
+
+@tool(description="A web-search tool")
+def web_search(query: str):
+    """A tool designed for information search on the Internet
+    
+    Args:
+        query: a query for a web-search to be executed   
+    """
+
+    _tavily_client = TavilyClient(api_key=TAVILY_API_KEY)
+    return _tavily_client.search(query=query, search_depth="basic", max_results=3)
 
 
-llm = ChatGroq(model="llama-3.3-70b-versatile")
-tools = [TavilySearch(api_key=TAVILY_API_KEY)]
+llm = ChatGroq(model="llama-3.3-70b-versatile", max_tokens=5096)
+tools = [web_search]
+llm_with_tools = llm.bind_tools(tools)
 tool_node = ToolNode(tools)
+
+
+
 def persona_call(state:WorkerState):
     name = state["name"]
     prompt = load_prompt(name)
-    chain = prompt | llm.bind_tools(tools)
-    question = state["question"]
+    chain = prompt | llm_with_tools
+    question = state["question"]    
     messages = state["messages"]
     corrections = state["corrections"]
     instructions = state["instructions"]
-    last_correction = corrections[-1] if corrections else ""
     response = chain.invoke({
         "question": question,
         "messages": messages,
-        "instructions": instructions,
-        "corrections": last_correction
+        "instructions": instructions,   
+        "corrections": corrections
     })
     return {"messages": [response]}
 
@@ -40,7 +59,7 @@ def should_use_tools(state:WorkerState):
 
 def reflection_call(state:WorkerState):
     prompt = load_prompt(name="reflector")
-    chain = prompt | llm.with_structured_output(ReflectionResponse)
+    chain = prompt | llm
     question = state["question"]
     messages = state["messages"]
     instructions = state["instructions"]
@@ -51,21 +70,16 @@ def reflection_call(state:WorkerState):
         "message": last_message,
         "instructions": instructions
     })
-    counter += 1
-    return{
-        "score": response.score,
-        "corrections": [response.correction],
-        "counter": counter
+    return{ 
+        "counter": counter + 1,
+        "corrections": response.content,
     }
 
 def should_end(state:WorkerState):
     counter = state["counter"]
-    score = state["score"]
-    if counter >= 3:
-        return "END"
-    if score >= 8.5:
-        return "END"
-    return "persona_call"
+    if counter < 3:
+        return "persona_call"
+    return "END"
 
 
 def build_persona_graph():
@@ -94,8 +108,8 @@ def build_persona_graph():
     )
     app = graph.compile()
     return app
-persona_graph = build_persona_graph()
-def run_persona(persona_initial_state):
+
+def run_persona(persona_graph, persona_initial_state:dict):
     response = persona_graph.invoke(persona_initial_state)
     messages = response["messages"]
     last_message = messages[-1]
