@@ -9,12 +9,16 @@ def load_prompt(name):
     return ChatPromptTemplate.from_template(prompt_text)
 
 def get_logger():
-    logging.basicConfig(
-        format="{asctime}-{levelname}-{name}-{message}",
-        style="{",
-        datefmt="%Y-%m-%d %H:%M"
-        )
-    logger = logging.getLogger(__name__)
+    logger = logging.getLogger("DecisionMaker")
+    if not logger.handlers:
+        handler = logging.StreamHandler()
+        handler.setFormatter(logging.Formatter(
+            fmt="{asctime}-{levelname}-{name}-{message}",
+            style="{",
+            datefmt="%Y-%m-%d %H:%M:%S"
+        ))
+        logger.addHandler(handler)
+        logger.setLevel(logging.INFO)
     return logger
 
 def load_presets():
@@ -24,4 +28,4 @@ def load_presets():
 
 def load_team(preset_name:str):
     presets = load_presets()
-    return presets[preset_name] 
+    return presets[preset_name]
