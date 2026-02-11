@@ -6,7 +6,9 @@ def load_prompt(name):
     with open(file="src/prompts.yaml", mode="r", encoding="utf-8") as f:
         all_prompts = yaml.safe_load(f)
         prompt_text = all_prompts[name]
-    return ChatPromptTemplate.from_template(prompt_text)
+    return ChatPromptTemplate.from_messages([
+        ("system", prompt_text)
+    ])
 
 def get_logger():
     logger = logging.getLogger("DecisionMaker")
@@ -21,11 +23,7 @@ def get_logger():
         logger.setLevel(logging.INFO)
     return logger
 
-def load_presets():
-    with open(file="src/presets.yaml", mode="r", encoding="utf-8") as f:
-        presets = yaml.safe_load(f)
-        return presets
-
-def load_team(preset_name:str):
-    presets = load_presets()
-    return presets[preset_name]
+def load_domain_names():
+    with open (file="src/prompts.yaml", mode="r", encoding="utf-8") as f:
+        domains = yaml.safe_load(f).keys()
+        return domains
