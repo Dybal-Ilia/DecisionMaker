@@ -1,12 +1,11 @@
 from langchain_groq.chat_models import ChatGroq
 from langgraph.graph import StateGraph, START, END
 from langgraph.prebuilt import ToolNode
-from langchain_tavily import TavilySearch
 from tavily  import TavilyClient
 from langchain_core.tools import tool
 from dotenv import load_dotenv
 import os
-from .schemas import WorkerState
+from .schemas import WorkerState, ReflectorResponse
 from src.utils import load_prompt
 from src.utils import get_logger
 
@@ -17,7 +16,7 @@ logger = get_logger()
 
 @tool(description="A web-search tool")
 def web_search(query: str):
-    """A tool designed for information search on the Internet
+    """Search for up-to-date information on the Internet
     
     Args:
         query (str): a query for a web-search to be executed   
@@ -52,6 +51,7 @@ class Worker:
             "corrections": corrections
         })
         logger.info(f"Persona {name} generated a response")
+        logger.info(f"PERSONA RESPONSE:\n{response.content}")
         return {"messages": [response]}
 
     def _should_use_tools(self, state:WorkerState):
@@ -63,7 +63,7 @@ class Worker:
 
     def _reflection_call(self, state:WorkerState):
         prompt = load_prompt(name="reflector")
-        chain = prompt | self.llm
+        chain = prompt | self.llm.with_structured_output(ReflectorResponse, method="json_mode")
         question = state["question"]
         messages = state["messages"]
         instructions = state["instructions"]
@@ -76,16 +76,25 @@ class Worker:
             "instructions": instructions
         })
         logger.info("Reflector generated corrections")
+        logger.info(f"REFLECTOR RESPONSE:\n{response}")
+
+        score = response.score
+        corrections = response.corrections
+        hallucinations = response.hallucination_flags
+        corrections.extend(hallucinations)
+
         return{ 
             "counter": counter + 1,
-            "corrections": response.content,
+            "score": score,
+            "corrections": corrections,
         }
 
     def _should_end(self, state:WorkerState):
         counter = state["counter"]
-        if counter < 2:
-            return "persona_call"
-        return "END"
+        score = state["score"]
+        if score > 8 or counter > 3:
+            return "END"
+        return "persona_call"
 
 
     def _build_persona_graph(self):
