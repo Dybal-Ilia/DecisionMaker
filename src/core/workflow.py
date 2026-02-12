@@ -1,22 +1,23 @@
+from langchain_google_genai.chat_models import ChatGoogleGenerativeAI
 from langchain_groq.chat_models import ChatGroq
 from langgraph.graph import StateGraph, END, START
 from src.utils import load_prompt
 from dotenv import load_dotenv
 from .schemas import ChatState, DecomposerResponse
-from langgraph.types import Send, Command
-from src.graph.persona import Worker
+from src.core.persona import Worker
 from src.utils import get_logger
 import os
 
 load_dotenv()
 
-GROQ_API_KEY = os.getenv("GRQO_API_KEY")
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+GROQ_API_KEY = os.getenv("GROQ_API_KEYs")
 logger = get_logger()
 
 class Chat:
     def __init__(self, model_name):
         self.llm = ChatGroq(model=model_name, api_key=GROQ_API_KEY)
-        self.worker = Worker(model_name="gemini-2.5-flash")
+        self.worker = Worker(model_name="gemini-2.5-flash-lite")
         self.graph = self._build_chat_graph()
 
     def _query_decomposition(self, state: ChatState) -> ChatState:
@@ -28,10 +29,8 @@ class Chat:
             "question": question
         })
         logger.info("Query Decomposer generated a response")
-        instructions = "\n".join(f"- {i}" for i in response.instructions)
-        ambiguities = "\n".join(f"- {i}" for i in response.ambiguities)
-        assumed_context = "\n".join(f"- {i}" for i in response.assumed_context)
-        return{"instructions":f"Instructions:\n{instructions}\nAmbiguities:\n{ambiguities}\nAssumed_context:\n{assumed_context}"}        
+        logger.info(response.model_dump_json(indent=2))
+        return{"instructions":response.model_dump_json(indent=2)}        
 
 
     def _call_persona(self, state:ChatState):
@@ -62,7 +61,7 @@ class Chat:
     
     def run_chat(self, initial_state:dict):
         response = self.graph.invoke(initial_state)
-        response = response["final_response"].content[-1]["text"]
+        response = response["final_response"].content
         return response
 
 
