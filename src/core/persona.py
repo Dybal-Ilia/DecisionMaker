@@ -1,4 +1,5 @@
 from langchain_groq.chat_models import ChatGroq
+from langchain_google_genai.chat_models import ChatGoogleGenerativeAI
 from langgraph.graph import StateGraph, START, END
 from langgraph.prebuilt import ToolNode
 from tavily  import TavilyClient
@@ -11,6 +12,7 @@ from src.utils import get_logger
 
 load_dotenv()
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 TAVILY_API_KEY = os.getenv("TAVILY_API_KEY")
 logger = get_logger()
 
@@ -32,7 +34,7 @@ tools = [web_search]
 
 class Worker:
     def __init__(self, model_name):
-        self.llm = ChatGroq(model=model_name, api_key=GROQ_API_KEY)
+        self.llm = ChatGoogleGenerativeAI(model=model_name, api_key=GOOGLE_API_KEY)
         self.graph = self._build_persona_graph()
 
     def _persona_call(self, state:WorkerState):
@@ -40,13 +42,14 @@ class Worker:
         prompt = load_prompt(name)
         question = state["question"]    
         messages = state["messages"]
+        last_message = messages[-1] if messages else ""
         corrections = state["corrections"]
         instructions = state["instructions"]
         chain = prompt | self.llm.bind_tools(tools)
         logger.info(f"Persona {name} is being executed")
         response = chain.invoke({
             "question": question,
-            "messages": messages,
+            "messages": last_message,
             "instructions": instructions,   
             "corrections": corrections
         })
@@ -80,8 +83,6 @@ class Worker:
 
         score = response.score
         corrections = response.corrections
-        hallucinations = response.hallucination_flags
-        corrections.extend(hallucinations)
 
         return{ 
             "counter": counter + 1,

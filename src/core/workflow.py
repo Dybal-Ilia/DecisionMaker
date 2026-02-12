@@ -16,7 +16,7 @@ logger = get_logger()
 class Chat:
     def __init__(self, model_name):
         self.llm = ChatGroq(model=model_name, api_key=GROQ_API_KEY)
-        self.worker = Worker(model_name="llama-3.3-70b-versatile")
+        self.worker = Worker(model_name="gemini-2.5-flash")
         self.graph = self._build_chat_graph()
 
     def _query_decomposition(self, state: ChatState) -> ChatState:
@@ -62,7 +62,7 @@ class Chat:
     
     def run_chat(self, initial_state:dict):
         response = self.graph.invoke(initial_state)
-        response = response["final_response"].content.replace("$", "\\$")
+        response = response["final_response"].content[-1]["text"]
         return response
 
 

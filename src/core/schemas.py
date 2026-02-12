@@ -11,7 +11,6 @@ class DecomposerResponse(BaseModel):
 
 class ReflectorResponse(BaseModel):
     score: int = Field(default=0, description="Numeric integer response score from 1 to 10")
-    hallucination_flags: list[str] = Field(default_factory=list, description="A list of possible hallucinations in agents response")
     corrections: list[str] = Field(default_factory=list, description="A list of corrections that should be applied to agents response")
 
 class WorkerState(TypedDict):
