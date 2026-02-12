@@ -451,8 +451,7 @@ reflector:
     ### Output Format
     You MUST respond with EXACTLY this JSON structure:
     - **score**: an integer that represents score (criteria described above)
-    - **hallucination_flags**: a flat list of any claims that appear fabricated or unverifiable, or empty list if none detected, e.g. ['flag1', 'flag2']
-    - **corrections**: a flat list of specific, actionable improvements the agent MUST apply to fix the response. Every hallucination flag MUST have a corresponding correction explaining what to fix and how. Additionally, include corrections for any other issues found (missing info, instruction violations, vagueness, etc.). Only return an empty list if there are zero hallucination flags AND zero issues found. e.g. ['correction1', 'correction2']
+    - **corrections**: a flat list of specific, actionable improvements the agent MUST apply to fix the response. Additionally, include corrections for any other issues found (missing info, instruction violations, vagueness, etc.). Only return an empty list if there are zero hallucination flags AND zero issues found. e.g. ['correction1', 'correction2']
     "
 decomposer:
     "
