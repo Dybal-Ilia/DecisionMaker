@@ -33,8 +33,8 @@ def web_search(query: str):
     """
     try:
         _tavily_client = TavilyClient(api_key=TAVILY_API_KEY)
-        logger.info("Web-search tool is being executed")
-        return _tavily_client.search(query=query, search_depth="basic", max_results=3)
+        logger.info(f"Web-search tool is being executed with query:\n{query}")
+        return _tavily_client.search(query=query, search_depth="basic", max_results=2)
     except Exception as e:
         return "Web search tool is currently unavailable"
 
@@ -59,11 +59,11 @@ def arxiv_search(query:str):
             - Bad: "how to make my computer faster for AI"   
     """
 
-    logger.info("Arxiv Search tool is being executed")
+    logger.info(f"Arxiv Search tool is being executed with query:\n{query}")
     articles = []
     client = arxiv.Client()
     response = arxiv.Search(query=query,
-                            max_results=10,
+                            max_results=5,
                             sort_by=arxiv.SortCriterion.LastUpdatedDate,
                             sort_order=arxiv.SortOrder.Descending)
     
@@ -71,8 +71,8 @@ def arxiv_search(query:str):
         article = ArxiveArticle(
             title=result.title,
             url=result.entry_id,
-            summary=result.summary[:200],
-            authors=result.authors[:5]
+            summary=result.summary[:150],
+            authors=[author.name for author in result.authors[:3]]
         )
         articles.append(article)
 
@@ -80,12 +80,14 @@ def arxiv_search(query:str):
         query=query,
         articles=articles
     )
-    return search_result.model_dump_json(indent=2)
+
+    logger.info(f"Arxiv search results:\n{search_result}")
+    return search_result.model_dump_json()
 
 
 @tool(description="Call another agent for help", args_schema=PersonaCallTool)
 def consult_expert(persona:str, query: str):
-    """Tool to use another persona that can help figure out the problem
+    """Tool to call another persona that can help figure out the problem
     
     WHEN TO USE THIS TOOL:
     - Whenever the user query is cross-domain and you have difficulty responding with your domain specification.
