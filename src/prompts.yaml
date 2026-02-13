@@ -25,6 +25,8 @@ Society & Culture:
     - **Past Thoughts:** You are given your own internal monologue/past thoughts to prevent repetition: {messages}
     - **Specific Instructions:** You must STRICTLY FOLLOW these additional constraints: {instructions}
     - **Supervisor Feedback:** Apply these corrections from your supervisor to your next message: {corrections}
+    - **Context** You are given previous message that contains context from your last finished response: {context}
+
 
     ### COMMUNICATION RULES
     - Be concrete and concise.
@@ -66,6 +68,7 @@ Science & Mathematics:
     - **Past Thoughts:** You are given your own internal monologue/past thoughts to prevent repetition: {messages}
     - **Specific Instructions:** You must STRICTLY FOLLOW these additional constraints: {instructions}
     - **Supervisor Feedback:** Apply these corrections from your supervisor to your next message: {corrections}
+    - **Context** You are given previous message that contains context from your last finished response: {context}
 
     ### COMMUNICATION RULES
     - Be concrete and concise.
@@ -107,6 +110,7 @@ Health:
     - **Past Thoughts:** You are given your own internal monologue/past thoughts to prevent repetition: {messages}
     - **Specific Instructions:** You must STRICTLY FOLLOW these additional constraints: {instructions}
     - **Supervisor Feedback:** Apply these corrections from your supervisor to your next message: {corrections}
+    - **Context** You are given previous message that contains context from your last finished response: {context}
 
     ### COMMUNICATION RULES
     - Be concrete and concise.
@@ -148,6 +152,7 @@ Education & Reference:
     - **Past Thoughts:** You are given your own internal monologue/past thoughts to prevent repetition: {messages}
     - **Specific Instructions:** You must STRICTLY FOLLOW these additional constraints: {instructions}
     - **Supervisor Feedback:** Apply these corrections from your supervisor to your next message: {corrections}
+    - **Context** You are given previous message that contains context from your last finished response: {context}
 
     ### COMMUNICATION RULES
     - Be concrete and concise.
@@ -189,6 +194,7 @@ Computers & Internet:
     - **Past Thoughts:** You are given your own internal monologue/past thoughts to prevent repetition: {messages}
     - **Specific Instructions:** You must STRICTLY FOLLOW these additional constraints: {instructions}
     - **Supervisor Feedback:** Apply these corrections from your supervisor to your next message: {corrections}
+    - **Context** You are given previous message that contains context from your last finished response: {context}
 
 
     ### COMMUNICATION RULES
@@ -231,6 +237,7 @@ Sports:
     - **Past Thoughts:** You are given your own internal monologue/past thoughts to prevent repetition: {messages}
     - **Specific Instructions:** You must STRICTLY FOLLOW these additional constraints: {instructions}
     - **Supervisor Feedback:** Apply these corrections from your supervisor to your next message: {corrections}
+    - **Context** You are given previous message that contains context from your last finished response: {context}
 
 
     ### COMMUNICATION RULES
@@ -273,6 +280,7 @@ Business & Finance:
     - **Past Thoughts:** You are given your own internal monologue/past thoughts to prevent repetition: {messages}
     - **Specific Instructions:** You must STRICTLY FOLLOW these additional constraints: {instructions}
     - **Supervisor Feedback:** Apply these corrections from your supervisor to your next message: {corrections}
+    - **Context** You are given previous message that contains context from your last finished response: {context}
 
 
     ### COMMUNICATION RULES
@@ -315,6 +323,7 @@ Entertainment & Music:
     - **Past Thoughts:** You are given your own internal monologue/past thoughts to prevent repetition: {messages}
     - **Specific Instructions:** You must STRICTLY FOLLOW these additional constraints: {instructions}
     - **Supervisor Feedback:** Apply these corrections from your supervisor to your next message: {corrections}
+    - **Context** You are given previous message that contains context from your last finished response: {context}
 
 
     ### COMMUNICATION RULES
@@ -357,6 +366,7 @@ Family & Relationships:
     - **Past Thoughts:** You are given your own internal monologue/past thoughts to prevent repetition: {messages}
     - **Specific Instructions:** You must STRICTLY FOLLOW these additional constraints: {instructions}
     - **Supervisor Feedback:** Apply these corrections from your supervisor to your next message: {corrections}
+    - **Context** You are given previous message that contains context from your last finished response: {context}
 
     ### COMMUNICATION RULES
     - Be concrete and concise.
@@ -398,6 +408,7 @@ Politics & Government:
     - **Past Thoughts:** You are given your own internal monologue/past thoughts to prevent repetition: {messages}
     - **Specific Instructions:** You must STRICTLY FOLLOW these additional constraints: {instructions}
     - **Supervisor Feedback:** Apply these corrections from your supervisor to your next message: {corrections}
+    - **Context** You are given previous message that contains context from your last finished response: {context}
 
     ### COMMUNICATION RULES
     - Be concrete and concise.
