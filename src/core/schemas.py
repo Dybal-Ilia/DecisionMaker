@@ -1,5 +1,5 @@
 from typing import TypedDict, Annotated, Literal
-from langchain_core.messages import AIMessage
+from langchain_core.messages import AIMessage, BaseMessage
 from pydantic import BaseModel, Field
 import operator
 
@@ -23,19 +23,16 @@ class ArxivSearchResult(BaseModel):
     query:str = Field(..., description="Initial search query")
     articles: list[ArxiveArticle] = Field(..., description="A list of ArxivArticle objects")
     
-class WorkerState(TypedDict):
-    question: str
-    name: str
-    instructions: str
-    messages: Annotated[list[AIMessage], operator.add]
-    counter: int
-    score: int
-    corrections: str
 
 class ChatState(TypedDict):
     question: str
     domain: str
     instructions: list[str]
+    messages: Annotated[list[BaseMessage], operator.add]
+    context: str
+    #counter: int
+    score: int
+    corrections: str
     final_response: AIMessage
 
 class PersonaCallTool(BaseModel):
