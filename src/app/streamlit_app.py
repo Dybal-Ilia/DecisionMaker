@@ -1,4 +1,5 @@
 import sys
+import asyncio
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -7,7 +8,7 @@ if str(ROOT) not in sys.path:
 
 #import torch
 import streamlit as st
-from src.graph.workflow import Chat
+from src.core.workflow import Chat
 
 # from transformers import AutoModelForSequenceClassification, AutoTokenizer
 
@@ -59,7 +60,8 @@ domains = ['Society & Culture',
  'Entertainment & Music',
  'Family & Relationships',
  'Politics & Government']
-chat = Chat(model_name="llama-3.1-8b-instant")
+chat = Chat()
+
 
 st.title("Decision Maker AI Application")
 domain = st.selectbox(label="Select a preset", options=domains, placeholder="")
@@ -75,12 +77,22 @@ for message in st.session_state.messages:
 if query := st.chat_input(placeholder="Your message"):
     st.chat_message("user").markdown(query)
     st.session_state.messages.append({"role": "user", "content": query})
-    response = chat.run_chat({
+    context = ""
+    for message in reversed(st.session_state.messages):
+        if message["role"] == "assistant":
+            context = message["content"]
+            break
+    response = asyncio.run(chat.run_chat({
         "question": query,
         "domain": domain,
         "instructions": [],
-        "final_reponse": ""
-    })
+        "messages": [],
+        #"counter": 0,
+        "score": 0,
+        "corrections": "",
+        "final_reponse": "",
+        "context": context
+    }))
     with st.chat_message("assistant"):
-        st.markdown(response, unsafe_allow_html=True)
+        st.markdown(response)
     st.session_state.messages.append({"role": "assistant", "content":response})
