@@ -40,6 +40,7 @@ class Chat:
         messages = state["messages"]
         corrections = state["corrections"]
         instructions = state["instructions"]
+        context = state["context"]
         llm_with_tools = self.llm.bind_tools(tools_list)
         logger.info(f"Persona {domain} is being executed")
 
@@ -48,7 +49,8 @@ class Chat:
                 "question": question,
                 "messages": "",
                 "instructions": instructions,
-                "corrections": corrections
+                "corrections": corrections,
+                "context": context
             }).to_messages()
 
             tool_exchange = []
@@ -68,7 +70,8 @@ class Chat:
                 "question": question,
                 "messages": last_message,
                 "instructions": instructions,
-                "corrections": corrections
+                "corrections": corrections,
+                "context": context
             })
 
         logger.info(f"Persona {domain} generated a response")
@@ -88,7 +91,7 @@ class Chat:
         question = state["question"]
         last_message = state["messages"][-1].content
         instructions = state["instructions"]
-        counter = state["counter"]
+        #counter = state["counter"]
         logger.info("Reflector is being called")
         response = await chain.ainvoke({
             "question": question,
@@ -102,15 +105,15 @@ class Chat:
         corrections = response.corrections
 
         return{ 
-            "counter": counter + 1,
+            #"counter": counter + 1,
             "score": score,
             "corrections": corrections,
         }
     
     def _should_end(self, state:ChatState):
-        counter = state["counter"]
+        #counter = state["counter"]
         score = state["score"]
-        if score > 8.5:
+        if score > 7:
             return "END"
         return "persona_call"
 
