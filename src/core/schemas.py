@@ -1,6 +1,6 @@
 from typing import TypedDict, Annotated, Literal
 from langchain_core.messages import AIMessage, BaseMessage
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, UUID4
 import operator
 
 
@@ -44,3 +44,9 @@ class PersonaCallTool(BaseModel):
 
 
 
+class User(BaseModel):
+    user_id: UUID4 = Field(..., description="User Unique UUID4 Identifier")
+    user_name: str = Field(..., description="User First Name")
+    user_lastname:str = Field(..., description="User Lastname")
+    user_nickname:str = Field(..., description="User Unique Nickname")
+    user_password:str = Field(..., description= "User Password Hash")
