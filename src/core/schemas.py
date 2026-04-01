@@ -5,9 +5,7 @@ import operator
 
 
 class DecomposerResponse(BaseModel):
-    instructions: list[str] = Field(description="Numbered list of atomic requirements extracted from the query")
-    ambiguities: list[str] = Field(default_factory=list, description="Unclear aspects that might need clarification")
-    assumed_context: list[str] = Field(default_factory=list, description="Implicit assumptions about user intent")
+    instructions: list[str] = Field(description="Numbered list of atomic requirements extracted from the query or Implicit assumptions about user intent")
 
 class ReflectorResponse(BaseModel):
     score: int = Field(default=0, description="Numeric integer response score from 1 to 10")
@@ -30,8 +28,8 @@ class ChatState(TypedDict):
     instructions: list[str]
     messages: Annotated[list[BaseMessage], operator.add]
     context: str
-    #counter: int
-    score: int
+    counter: int
+    # score: int
     corrections: str
     final_response: AIMessage
 
