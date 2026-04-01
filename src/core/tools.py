@@ -106,7 +106,8 @@ def consult_expert(persona:str, query: str):
             "question": query,   
             "messages": "",
             "instructions": [],   
-            "corrections": ""
+            "corrections": "",
+            "context": ""
         })
     return response.content[-1]["text"]
     
