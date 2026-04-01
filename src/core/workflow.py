@@ -7,7 +7,6 @@ from dotenv import load_dotenv
 from .schemas import ChatState, DecomposerResponse, ReflectorResponse
 from src.utils import get_logger
 from .tools import tools_list
-import asyncio
 import os
 
 load_dotenv()
@@ -30,12 +29,31 @@ class Chat:
         })
         logger.info("Query Decomposer generated a response")
         logger.info(response.model_dump_json(indent=2))
-        return{"instructions":response.model_dump_json(indent=2)}        
+        return{"instructions":response.model_dump_json(indent=2)}       
 
-
+    async def _domain_classification(self, state: ChatState) -> ChatState:
+        question = state["question"]
+        prompt = load_prompt(name="domain_classifier")
+        chain = prompt | self.llm
+        logger.info("Domain Classifier is being called")
+        response = await chain.ainvoke({
+            "question": question,
+            "domains": ['Society & Culture',
+                        'Science & Mathematics',
+                        'Health',
+                        'Education & Reference',
+                        'Computers & Internet',
+                        'Sports',
+                        'Business & Finance',
+                        'Entertainment & Music',
+                        'Family & Relationships',
+                        'Politics & Government']
+        })
+        return {"domain":response.content}
+    
     async def _persona_call(self, state:ChatState):
         domain = state["domain"]
-        prompt = load_prompt(domain)
+        prompt = load_prompt("Persona")
         question = state["question"]    
         messages = state["messages"]
         corrections = state["corrections"]
@@ -91,7 +109,7 @@ class Chat:
         question = state["question"]
         last_message = state["messages"][-1].content
         instructions = state["instructions"]
-        #counter = state["counter"]
+        counter = state["counter"]
         logger.info("Reflector is being called")
         response = await chain.ainvoke({
             "question": question,
@@ -101,19 +119,16 @@ class Chat:
         logger.info("Reflector generated corrections")
         logger.info(f"REFLECTOR RESPONSE:\n{response.model_dump_json()}")
 
-        score = response.score
         corrections = response.corrections
 
         return{ 
-            #"counter": counter + 1,
-            "score": score,
+            "counter": counter + 1,
             "corrections": corrections,
         }
     
     def _should_end(self, state:ChatState):
-        #counter = state["counter"]
-        score = state["score"]
-        if score > 7:
+        counter = state["counter"]
+        if counter > 1:
             return "END"
         return "persona_call"
 
