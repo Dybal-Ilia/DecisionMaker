@@ -43,3 +43,9 @@ def wrap_user(user_name:str,
                 user_password=user_password_hash
                 )
     return user
+
+def is_nickname_available(db, nickname):
+    all_nicknames = db.loop.run_until_complete(db.get_nicknames_list())
+    if nickname in all_nicknames:
+        return False
+    return True
