@@ -9,6 +9,7 @@ if str(ROOT) not in sys.path:
 from loginpage import render_login_popup
 from chatpage import render_chat_page
 from profilepage import render_profile_page
+from decisionspage import render_decisionpage
 
 if "logged_in" not in st.session_state:
     st.session_state.logged_in = False
@@ -46,11 +47,11 @@ home_page = st.Page(page=render_homepage, title="Home")
 chat_page = st.Page(page=render_chat_page, title="Chat")
 profile_page = st.Page(page=render_profile_page, title="My Profile")
 login_page = st.Page(page=render_login_popup, title="Log In")
-
+decision_page = st.Page(page=render_decisionpage, title="My Decisions")
 
 
 if st.session_state.logged_in:
-    pg = st.navigation([home_page, chat_page, profile_page])
+    pg = st.navigation([home_page, chat_page, profile_page, decision_page])
 else:
     pg = st.navigation([home_page, login_page])
 pg.run()
