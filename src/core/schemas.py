@@ -48,3 +48,13 @@ class User(BaseModel):
     user_lastname:str = Field(..., description="User Lastname")
     user_nickname:str = Field(..., description="User Unique Nickname")
     user_password:str = Field(..., description= "User Password Hash")
+
+
+class DecisionDraft(BaseModel):
+    general_intent: str = Field(..., description="User's general intent. It's short and accurate." \
+    "For example if user queries about vacation and going abroad it should be 'Travelling', etc.")
+    options: list[str] = Field(..., description="A list of options the user provided. For example if the query is like" \
+    "'I'm planning to buy a car and cant decide between audi and bmw' then the options are [audi, bmw]")
+    preferences: list[str] = Field(..., description="A list of preferences provided by the user. It can be anything that the user mentioned. For example if the query is like:" \
+    "'Help me decide where to travel, I want it to be warm and not rainy', the preferences are [the travel country is warm, the weather should be sunny]")
+    assumptions: list[str] = Field(..., description="A list of your own assumptions. It is more like a draft of your plan and thoughts. What you are going to investigate, what should be taken into account, somw other notes you can only assume")
