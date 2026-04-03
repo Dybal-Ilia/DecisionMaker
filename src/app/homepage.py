@@ -18,10 +18,11 @@ if "logged_user_nickname" not in st.session_state:
      st.session_state.logged_user_nickname = None
 
 if st.session_state.logged_in:
-    if "chat" not in st.session_state:
-        from src.core.workflow import Chat
-        st.session_state.chat = Chat()
-
+    if "current_draft" not in st.session_state:
+        st.session_state.current_draft = None
+    if "draft_clarifications" not in st.session_state:
+        st.session_state.draft_clarifications = None
+    
 
 def render_homepage():
     st.title("Homepage")
@@ -47,7 +48,7 @@ home_page = st.Page(page=render_homepage, title="Home")
 chat_page = st.Page(page=render_chat_page, title="Chat")
 profile_page = st.Page(page=render_profile_page, title="My Profile")
 login_page = st.Page(page=render_login_popup, title="Log In")
-decision_page = st.Page(page=render_decisionpage, title="My Decisions")
+decision_page = st.Page(page=render_decisionpage, title="Make a Decision")
 
 
 if st.session_state.logged_in:
