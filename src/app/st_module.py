@@ -1,5 +1,6 @@
 import streamlit as st
 from src.core.schemas import User
+from src.core.workflow import Drafter, Chat
 from uuid import uuid4
 import hashlib
 import asyncio
@@ -10,6 +11,13 @@ def get_event_loop():
     asyncio.set_event_loop(loop)
     return loop
 
+@st.cache_resource
+def get_drafter_agent():
+    return Drafter()
+
+@st.cache_resource
+def get_chat_agent():
+    return Chat()
 
 def check_login(db, user_nickname, user_password):
     all_nicknames = db.loop.run_until_complete(db.get_nicknames_list())
