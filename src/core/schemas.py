@@ -57,4 +57,4 @@ class DecisionDraft(BaseModel):
     "'I'm planning to buy a car and cant decide between audi and bmw' then the options are [audi, bmw]")
     preferences: list[str] = Field(..., description="A list of preferences provided by the user. It can be anything that the user mentioned. For example if the query is like:" \
     "'Help me decide where to travel, I want it to be warm and not rainy', the preferences are [the travel country is warm, the weather should be sunny]")
-    assumptions: list[str] = Field(..., description="A list of your own assumptions. It is more like a draft of your plan and thoughts. What you are going to investigate, what should be taken into account, somw other notes you can only assume")
+    clarifications: list[str] = Field(..., description="A list of follow-up questions that you think need to be clarified that you personally believe are important for better user query and intent understanding")
