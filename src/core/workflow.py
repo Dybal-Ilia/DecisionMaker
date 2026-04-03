@@ -4,9 +4,10 @@ from langgraph.graph import StateGraph, END, START
 from langgraph.prebuilt import ToolNode
 from src.utils import load_prompt
 from dotenv import load_dotenv
-from .schemas import ChatState, DecomposerResponse, ReflectorResponse
+from .schemas import ChatState, DecomposerResponse, ReflectorResponse, DecisionDraft
 from src.utils import get_logger
 from .tools import tools_list
+import streamlit as st
 import os
 
 load_dotenv()
@@ -166,3 +167,15 @@ class Chat:
         return message_to_display
 
 
+
+class Drafter:
+    def __init__(self):
+        self.llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash-lite", api_key=GEMINI_API_KEY)
+    
+    async def generate_draft(self, query:str):
+        prompt = load_prompt(name="drafter")
+        chain = prompt | self.llm.with_structured_output(DecisionDraft)
+        response = await chain.ainvoke({
+            "query": query
+        })
+        return response
