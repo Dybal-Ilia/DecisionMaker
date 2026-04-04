@@ -4,14 +4,16 @@ import streamlit as st
 import os
 import asyncio
 from dotenv import load_dotenv
+
 load_dotenv()
 
 DB_URI = os.getenv("DB_URI")
 
+
 class PGManager:
-    def __init__(self, conn: psycopg.AsyncConnection, loop:asyncio.AbstractEventLoop):
+    def __init__(self, conn: psycopg.AsyncConnection, loop: asyncio.AbstractEventLoop):
         self.conn = conn
-        self.loop=loop
+        self.loop = loop
 
     async def create_user(self, user: User) -> bool:
         query = """
@@ -20,17 +22,21 @@ class PGManager:
         """
         try:
             async with self.conn.cursor() as cursor:
-                await cursor.execute(query, (
-                    user.user_id,
-                    user.user_name,
-                    user.user_lastname,
-                    user.user_nickname,
-                    user.user_password
-                ))
+                await cursor.execute(
+                    query,
+                    (
+                        user.user_id,
+                        user.user_name,
+                        user.user_lastname,
+                        user.user_nickname,
+                        user.user_password,
+                    ),
+                )
             await self.conn.commit()
             return True
-        except:
-            await self.conn.rollback() 
+        except Exception as e:
+            st.error(f"Unable to create a user: {e}")
+            await self.conn.rollback()
             return False
 
     async def get_user_by_nickname(self, nickname: str):
@@ -43,10 +49,11 @@ class PGManager:
                 await cursor.execute(query, (nickname,))
                 res = await cursor.fetchone()
                 return res
-        except:
+        except Exception as e:
+            st.error(f"Unable to fetch user {nickname}: {e}")
             await self.conn.rollback()
             return None
-        
+
     async def get_nicknames_list(self):
         sql = """
                 SELECT 
@@ -59,12 +66,13 @@ class PGManager:
                 res = await cursor.fetchall()
             nickname_list = [r[0] for r in res]
             return nickname_list
-        except:
+        except Exception as e:
+            st.error(f"Unable to fetch nicknams list: {e}")
             await self.conn.rollback()
             return None
 
     async def fetch_password_by_nickname(self, user_nickname):
-        sql = f"""SELECT 
+        sql = """SELECT 
                     user_password
                 FROM public.users WHERE user_nickname = %s
                     """
@@ -73,7 +81,8 @@ class PGManager:
                 await cursor.execute(sql, (user_nickname,))
                 res = await cursor.fetchone()
             return res[0]
-        except:
+        except Exception as e:
+            st.error(f"Unable to fetch user password: {e}")
             await self.conn.rollback()
             return None
 
@@ -82,8 +91,10 @@ class PGManager:
 def get_db(_db_uri):
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
+
     async def init_conn():
         return await psycopg.AsyncConnection.connect(_db_uri)
+
     conn = loop.run_until_complete(init_conn())
     manager = PGManager(conn, loop)
     return manager
