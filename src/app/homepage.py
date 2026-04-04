@@ -13,35 +13,46 @@ from decisionspage import render_decisionpage
 
 if "logged_in" not in st.session_state:
     st.session_state.logged_in = False
-    
+
 if "logged_user_nickname" not in st.session_state:
-     st.session_state.logged_user_nickname = None
+    st.session_state.logged_user_nickname = None
 
 if st.session_state.logged_in:
     if "current_draft" not in st.session_state:
         st.session_state.current_draft = None
     if "draft_clarifications" not in st.session_state:
         st.session_state.draft_clarifications = None
-    
+
 
 def render_homepage():
     st.title("Homepage")
     st.divider()
     st.markdown("## Hi, there! Here's the manual how to use the app")
     st.markdown("### 1. Sign In or Sign Up")
-    st.markdown("To start utilizing the app you need to create an account. To do so you should click *Sign In* link in the navigation bar." \
-    "You will be offered 2 options: *Sign In* or *Sign Up*. Use *Sign In* in case you already have an account. Use *Sign Up* in case you don't have one." \
-    "Once the account is created you will be **automatically** signed in", text_alignment="justify")
+    st.markdown(
+        "To start utilizing the app you need to create an account. To do so you should click *Sign In* link in the navigation bar."
+        "You will be offered 2 options: *Sign In* or *Sign Up*. Use *Sign In* in case you already have an account. Use *Sign Up* in case you don't have one."
+        "Once the account is created you will be **automatically** signed in",
+        text_alignment="justify",
+    )
     st.divider()
     st.markdown("### 2. Start Chatting")
-    st.markdown("Once you signed in, you will be given access to chat section. To start chatting use *Chat* link in the navigation bar.")
+    st.markdown(
+        "Once you signed in, you will be given access to chat section. To start chatting use *Chat* link in the navigation bar."
+    )
     st.divider()
     st.markdown("### 3. My Profile")
-    st.markdown("You can also inspect your account. To do so click *My Profile* link in the navigation bar. There you will be able to see your personal data" \
-    "like *First Name*, *Second Name* or *Nickname*. For now the information is not editable, but later in future you'll be able to edit your personal data", text_alignment="justify")
+    st.markdown(
+        "You can also inspect your account. To do so click *My Profile* link in the navigation bar. There you will be able to see your personal data"
+        "like *First Name*, *Second Name* or *Nickname*. For now the information is not editable, but later in future you'll be able to edit your personal data",
+        text_alignment="justify",
+    )
     st.divider()
     st.markdown("### 4. Analytics")
-    st.markdown("In this section you will be able to inspect some dashboards like *Messages Sent*, *Tokens Used*, *Memories Saved*", text_alignment="justify")
+    st.markdown(
+        "In this section you will be able to inspect some dashboards like *Messages Sent*, *Tokens Used*, *Memories Saved*",
+        text_alignment="justify",
+    )
 
 
 home_page = st.Page(page=render_homepage, title="Home")
