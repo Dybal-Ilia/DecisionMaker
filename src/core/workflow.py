@@ -4,7 +4,7 @@ from langgraph.graph import StateGraph, END
 from langgraph.prebuilt import ToolNode
 from src.utils import load_prompt
 from dotenv import load_dotenv
-from .schemas import ChatState, DecomposerResponse, ReflectorResponse, DecisionDraft
+from .schemas import ChatState, DecisionDraft
 from src.utils import get_logger
 from .tools import tools_list
 import streamlit as st
@@ -13,71 +13,37 @@ import os
 load_dotenv()
 
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+LLM_MODEL = os.getenv("LLM_MODEL")
 logger = get_logger()
 
 
-class Chat:
-    def __init__(self):
+class Persona:
+    def __init__(self, db):
         self.llm = ChatGoogleGenerativeAI(
-            model="gemini-2.5-flash-lite", api_key=GEMINI_API_KEY
+            model=LLM_MODEL, api_key=GEMINI_API_KEY
         )
+        self.db = db
         self.graph = self._build_chat_graph()
 
-    async def _query_decomposition(self, state: ChatState) -> ChatState:
-        question = state["question"]
-        prompt = load_prompt(name="decomposer")
-        chain = prompt | self.llm.with_structured_output(
-            DecomposerResponse, method="json_mode"
-        )
-        logger.info("Query Decomposer is being called")
-        response = await chain.ainvoke({"question": question})
-        logger.info("Query Decomposer generated a response")
-        logger.info(response.model_dump_json(indent=2))
-        return {"instructions": response.model_dump_json(indent=2)}
-
-    async def _domain_classification(self, state: ChatState) -> ChatState:
-        question = state["question"]
-        prompt = load_prompt(name="domain_classifier")
-        chain = prompt | self.llm
-        logger.info("Domain Classifier is being called")
-        response = await chain.ainvoke(
-            {
-                "question": question,
-                "domains": [
-                    "Society & Culture",
-                    "Science & Mathematics",
-                    "Health",
-                    "Education & Reference",
-                    "Computers & Internet",
-                    "Sports",
-                    "Business & Finance",
-                    "Entertainment & Music",
-                    "Family & Relationships",
-                    "Politics & Government",
-                ],
-            }
-        )
-        return {"domain": response.content}
 
     async def _persona_call(self, state: ChatState):
-        domain = state["domain"]
         prompt = load_prompt("Persona")
-        question = state["question"]
+        query = state["query"]
+        draft = state["draft"]
+        draft_clarifications = state["clarifications"]
         messages = state["messages"]
-        corrections = state["corrections"]
-        instructions = state["instructions"]
-        context = state["context"]
+        memories = state["memories"]
         llm_with_tools = self.llm.bind_tools(tools_list)
-        logger.info(f"Persona {domain} is being executed")
+        logger.info("Persona is being called")
 
         if messages and isinstance(messages[-1], ToolMessage):
             prompt_messages = prompt.invoke(
                 {
-                    "question": question,
+                    "query": query,
+                    "draft": draft.model_dump_json(indent=2),
+                    "draft_clarifications": draft_clarifications,
                     "messages": "",
-                    "instructions": instructions,
-                    "corrections": corrections,
-                    "context": context,
+                    "memories": memories
                 }
             ).to_messages()
 
@@ -86,9 +52,6 @@ class Chat:
                 tool_exchange.insert(0, msg)
                 if isinstance(msg, AIMessage) and getattr(msg, "tool_calls", None):
                     break
-            for msg in tool_exchange:
-                if isinstance(msg, ToolMessage) and len(msg.content) > 1000:
-                    msg.content = msg.content[:1000] + "\n... [truncated]"
 
             response = await llm_with_tools.ainvoke(prompt_messages + tool_exchange)
         else:
@@ -96,77 +59,39 @@ class Chat:
             chain = prompt | llm_with_tools
             response = await chain.ainvoke(
                 {
-                    "question": question,
+                    "query": query,
+                    "draft": draft.model_dump_json(indent=2),
+                    "draft_clarifications": draft_clarifications,
                     "messages": last_message,
-                    "instructions": instructions,
-                    "corrections": corrections,
-                    "context": context,
+                    "memories": memories
                 }
             )
 
-        logger.info(f"Persona {domain} generated a response")
+        logger.info("Persona generated a response")
         logger.info(f"PERSONA RESPONSE:\n{response.content}")
         return {"messages": [response]}
 
+    def _upadte_final_response(state:ChatState):
+        messages = state["messages"]
+        return {"final_response": messages[-1]}
     def _should_use_tools(self, state: ChatState):
         messages = state["messages"]
         last_message = messages[-1]
         if last_message.tool_calls:
             return "tools"
-        return "reflection_call"
-
-    async def _reflection_call(self, state: ChatState):
-        prompt = load_prompt(name="reflector")
-        chain = prompt | self.llm.with_structured_output(
-            ReflectorResponse, method="json_mode"
-        )
-        question = state["question"]
-        last_message = state["messages"][-1].content
-        instructions = state["instructions"]
-        counter = state["counter"]
-        logger.info("Reflector is being called")
-        response = await chain.ainvoke(
-            {
-                "question": question,
-                "message": last_message,
-                "instructions": instructions,
-            }
-        )
-        logger.info("Reflector generated corrections")
-        logger.info(f"REFLECTOR RESPONSE:\n{response.model_dump_json()}")
-
-        corrections = response.corrections
-
-        return {
-            "counter": counter + 1,
-            "corrections": corrections,
-        }
-
-    def _should_end(self, state: ChatState):
-        counter = state["counter"]
-        if counter > 1:
-            return "END"
-        return "persona_call"
+        return "end"
 
     def _build_chat_graph(self):
         graph = StateGraph(ChatState)
-        graph.add_node("query_decomposition", self._query_decomposition)
         graph.add_node("persona_call", self._persona_call)
         graph.add_node("tools", ToolNode(tools_list))
-        graph.add_node("reflection_call", self._reflection_call)
-        graph.set_entry_point("query_decomposition")
-        graph.add_edge("query_decomposition", "persona_call")
         graph.add_conditional_edges(
             source="persona_call",
             path=self._should_use_tools,
-            path_map={"tools": "tools", "reflection_call": "reflection_call"},
+            path_map={"tools": "tools", "end": END},
         )
         graph.add_edge("tools", "persona_call")
-        graph.add_conditional_edges(
-            source="reflection_call",
-            path=self._should_end,
-            path_map={"END": END, "persona_call": "persona_call"},
-        )
+        graph.set_entry_point("persona_call")
         app = graph.compile()
         return app
 
@@ -191,3 +116,4 @@ class Drafter:
         except Exception as e:
             st.error(f"Unable to invoke Drafter: {e}")
             return None
+   
