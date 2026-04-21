@@ -17,11 +17,6 @@ if "logged_in" not in st.session_state:
 if "logged_user_nickname" not in st.session_state:
     st.session_state.logged_user_nickname = None
 
-if st.session_state.logged_in:
-    if "current_draft" not in st.session_state:
-        st.session_state.current_draft = None
-    if "draft_clarifications" not in st.session_state:
-        st.session_state.draft_clarifications = None
 
 
 def render_homepage():
