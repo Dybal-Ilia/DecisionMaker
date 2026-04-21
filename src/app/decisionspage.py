@@ -5,12 +5,19 @@ import sys
 ROOT = Path(__file__).resolve().parents[2]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
-from st_module import get_event_loop
-from st_module import get_drafter_agent
+from st_module import get_drafter_agent, get_event_loop, get_persona_agent
+from src.core.db import get_db
+import os
+from dotenv import load_dotenv
 
+load_dotenv()
+DB_URI = os.getenv("DB_URI")
+    
 
 @st.fragment
 def render_clarifications_form(clarifications_list):
+    if "draft_clarifications" not in st.session_state:
+        st.session_state.draft_clarifications = None
     st.markdown("### Clarifications Needed")
     st.write("The AI needs a few more details to finalize your draft:")
 
@@ -53,12 +60,18 @@ def render_draft(draft):
 
     st.write("")
 
-    render_clarifications_form(draft.clarifications)
-
 
 def render_decisionpage():
+    if "current_draft" not in st.session_state:
+        st.session_state.current_draft = None
+    if "draft_clarifications" not in st.session_state:
+        st.session_state.draft_clarifications = {}
+    if "decision_response" not in st.session_state:
+        st.session_state.decision_response = None
     loop = get_event_loop()
     drafter = get_drafter_agent()
+    db = get_db(DB_URI)
+    persona = get_persona_agent(db)
     st.header("Make a Decision")
     st.divider()
     with st.container(border=True):
@@ -70,5 +83,24 @@ def render_decisionpage():
             draft = loop.run_until_complete(drafter.generate_draft(query))
             if draft is not None:
                 render_draft(draft)
+                st.session_state.decision_response = None
+        if st.session_state.current_draft is not None:
+            render_clarifications_form(st.session_state.current_draft.clarifications)
 
-            st.button("Generate a Decision")
+        if st.button("Generate a Decision", disabled=st.session_state.current_draft is None):
+            response = loop.run_until_complete(
+                persona.run_chat(
+                    initial_state={
+                        "query": query,
+                        "draft": st.session_state.current_draft,
+                        "messages": [],
+                        "clarifications": st.session_state.draft_clarifications or {},
+                        "memories": [],
+                        "final_response": "",
+                    }
+                )
+            )
+            st.session_state.decision_response = response
+
+        if st.session_state.decision_response:
+            st.markdown(st.session_state.decision_response)
