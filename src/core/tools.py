@@ -2,9 +2,7 @@ from langchain_core.tools import tool
 from tavily import TavilyClient
 from dotenv import load_dotenv
 from ..utils import get_logger
-from .schemas import ArxiveArticle, ArxivSearchResult, PersonaCallTool
-from langchain_google_genai.chat_models import ChatGoogleGenerativeAI
-from ..utils import load_prompt
+from .schemas import ArxiveArticle, ArxivSearchResult
 import arxiv
 import os
 
@@ -85,33 +83,4 @@ def arxiv_search(query: str):
     return search_result.model_dump_json()
 
 
-@tool(description="Call another agent for help", args_schema=PersonaCallTool)
-def consult_expert(persona: str, query: str):
-    """Tool to call another persona that can help figure out the problem
-
-    WHEN TO USE THIS TOOL:
-    - Whenever the user query is cross-domain and you have difficulty responding with your domain specification.
-    - In case you think you might benefir from different point of view
-
-    Args:
-        persona (str): name of the persona to be called
-        query (str): a query the persona will have to give answer to
-    """
-    logger.info("Tool consul_expert is executed")
-    prompt = load_prompt(persona)
-    llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash-lite")
-    chain = prompt | llm
-    logger.info(f"Tool consult_expert called {persona} to execute:\n{query}")
-    response = chain.invoke(
-        {
-            "question": query,
-            "messages": "",
-            "instructions": [],
-            "corrections": "",
-            "context": "",
-        }
-    )
-    return response.content[-1]["text"]
-
-
-tools_list = [web_search, arxiv_search, consult_expert]
+tools_list = [web_search, arxiv_search]
