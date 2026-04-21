@@ -37,46 +37,6 @@ class ArxivSearchResult(BaseModel):
         ..., description="A list of ArxivArticle objects"
     )
 
-
-class ChatState(TypedDict):
-    question: str
-    domain: str
-    instructions: list[str]
-    messages: Annotated[list[BaseMessage], operator.add]
-    context: str
-    counter: int
-    # score: int
-    corrections: str
-    final_response: AIMessage
-
-
-class PersonaCallTool(BaseModel):
-    persona: Literal[
-        "Society & Culture",
-        "Science & Mathematics",
-        "Health",
-        "Education & Reference",
-        "Computers & Internet",
-        "Sports",
-        "Business & Finance",
-        "Entertainment & Music",
-        "Family & Relationships",
-        "Politics & Government",
-    ] = Field(..., description="A name of persona to be called for query execution")
-    query: str = Field(
-        ...,
-        description="A query that is redirected to another persona (can fully match the initial user query)",
-    )
-
-
-class User(BaseModel):
-    user_id: UUID4 = Field(..., description="User Unique UUID4 Identifier")
-    user_name: str = Field(..., description="User First Name")
-    user_lastname: str = Field(..., description="User Lastname")
-    user_nickname: str = Field(..., description="User Unique Nickname")
-    user_password: str = Field(..., description="User Password Hash")
-
-
 class DecisionDraft(BaseModel):
     general_intent: str = Field(
         ...,
@@ -97,3 +57,22 @@ class DecisionDraft(BaseModel):
         ...,
         description="A list of follow-up questions that you think need to be clarified that you personally believe are important for better user query and intent understanding",
     )
+
+class ChatState(TypedDict):
+    query: str
+    draft: DecisionDraft
+    messages: Annotated[list[BaseMessage], operator.add]
+    clarifications: dict[str, str]
+    memories: list[str]
+    final_response: AIMessage
+
+
+
+class User(BaseModel):
+    user_id: UUID4 = Field(..., description="User Unique UUID4 Identifier")
+    user_name: str = Field(..., description="User First Name")
+    user_lastname: str = Field(..., description="User Lastname")
+    user_nickname: str = Field(..., description="User Unique Nickname")
+    user_password: str = Field(..., description="User Password Hash")
+
+
